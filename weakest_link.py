@@ -329,7 +329,7 @@ class WeakestLinkRound :
                 total_time = total_time + time_taken.total_seconds()
                 total_banked += money_banked
 
-            percent_correct = float(total_correct) / len(answers)
+            percent_correct = float(total_correct) / len(answers) if len(answers) > 0 else 0
 
             if weakest_link == None :
                 weakest_link = (player, percent_correct, total_time, total_banked)
