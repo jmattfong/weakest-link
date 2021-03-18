@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import csv
 import sys
 import time
 import threading
 import random
+import socketserver
+import http.server
+import re
+import json
 
 DEFAULT_DATA_PATH="data/"
 
@@ -110,8 +114,13 @@ def wait_for_choice(message, choices) :
 def red(message) :
     return RED + BOLD + str(message) + END + END
 
-def dollars(amount) :
-    return green("${:,.2f}".format(amount))
+def dollars(amount, color=True) :
+    text = "${:,.2f}".format(amount)
+    return green(text) if color else text
+
+def format_time(seconds) :
+    td = str(timedelta(seconds=seconds))
+    return ':'.join(td.split(':')[1:])
 
 def vowel_start(word) :
     return word[0].lower() in ['a', 'e', 'i', 'o', 'u']
@@ -127,7 +136,7 @@ def random_mean_word() :
         'miserable',
         'inadequate',
         'insufficient',
-        'pathetic',
+        'pathet ic',
         'stingy',
         'minute',
         'scaled-down',
@@ -162,6 +171,11 @@ class WeakestLinkRound :
         self.current_link = 0
         self.started = False
         self.spaces = '                                '
+        self.players = []
+        self.current_question = 0
+        self.current_player_banked = 0
+        self.first_player_offset = 0
+        self.seconds_remaining = self.round_time_s
 
     def add_question(self, question, answer) :
         self.questions.append((question, answer))
@@ -171,11 +185,9 @@ class WeakestLinkRound :
             print('Round is already started!')
             return
         self.players = players
-        self.current_player_banked = 0
         self.player_answers = dict([(player, []) for player in players])
         self.start_time = datetime.now()
         self.question_start_time = self.start_time
-        self.current_question = 0
         self.started = True
 
         self.first_player_offset = 0
@@ -232,8 +244,14 @@ class WeakestLinkRound :
         self.done = True
         print()
 
+    def get_current_player_num(self) :
+        return (self.current_question + self.first_player_offset) % len(self.players) if len(self.players) > 0 else 0
+
+    def get_current_player(self) :
+        return self.players[self.get_current_player_num()]
+
     def get_question(self) :
-        current_player = self.players[(self.current_question + self.first_player_offset) % len(self.players)]
+        current_player = self.get_current_player()
         (question, answer) = self.questions[self.current_question]
         return green('"' + current_player + ': ' + question + '?"') + ' (Answer: ' +  red(answer) + ')'
 
@@ -259,7 +277,8 @@ class WeakestLinkRound :
             print('Round is over!')
             return
         question_stop_time = datetime.now()
-        current_player = self.players[self.current_question % len(self.players)]
+        # TODO why was it like this? current_player = self.players[self.current_question % len(self.players)]
+        current_player = self.get_current_player()
         answer = (correct, question_stop_time - self.question_start_time, self.current_player_banked)
         self.player_answers[current_player].append(answer)
 
@@ -449,10 +468,15 @@ class WeakestLinkGame :
         self.final_round = final_round
         self.total_bank = 0
         self.maximum_bank = 0
+        self.current_round = 0
+
+    def get_current_round(self) :
+        return self.rounds[self.current_round] if self.current_round < len(self.rounds) else self.final_round
 
     def run(self) :
         first_player = self.players[0]
         for i in range(len(self.rounds)) :
+            self.current_round = i
             if len(self.players) == 2 :
                 print("Not running all rounds since we don't have enough players")
                 print()
@@ -508,55 +532,98 @@ class WeakestLinkGame :
         self.players.remove(weakest_link)
         return weakest_link
 
-def main():
-    question_file = sys.argv[1]
-    players = sys.argv[2:]
-    print('Welcome players', ', '.join(players))
-    print()
+PORT=8080
 
-    rounds = []
-    final_round = FinalRound()
+def start_server():
+    httpd = socketserver.ThreadingTCPServer(('', PORT), CustomHandler)
+    httpd.serve_forever()
 
-    with open(question_file) as csv_file:
+class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for row in csv_reader :
-            round_num = int(row[0])
-            question = row[1]
-            answer = row[2]
+    def __init__(self, *args, directory='./html/', **kwargs) :
+        super().__init__(*args, directory=directory, **kwargs)
 
-            if round_num > len(ROUNDS) :
-                final_round.add_question(question, answer)
-            else :
-                if round_num > len(rounds) :
-                    for i in range(len(rounds), round_num) :
-                        (allotted_time, links) = ROUNDS[i]
-                        links = [link * DOLLAR_PERCENT for link in links]
-                        rounds.append(WeakestLinkRound(allotted_time, links))
-                rounds[round_num - 1].add_question(question, answer)
+    log_file = open('server.log', 'w', 1)
+    def log_message(self, format, *args):
+        self.log_file.write("%s - - [%s] %s\n" %
+                            (self.client_address[0],
+                             self.log_date_time_string(),
+                             format%args))
 
-    for i in range(len(rounds)) :
-        round = rounds[i]
-        print('Loaded', len(round.questions), 'questions for round', i+1)
-    print('Loaded', len(final_round.questions), 'questions for the final round')
-    print()
+    def do_GET(self):
+        if None != re.search('/api/current-round', self.path):
+            self.send_response(200)
+            self.send_header('Content-type','text/html')
+            self.end_headers()
+            response = {
+                "players": game.players,
+                "currentBank": dollars(game.get_current_round().round_bank, color=False),
+                "totalBank": dollars(game.total_bank, color=False),
+                "bankLinks": [dollars(link, color=False) for link in game.get_current_round().bank_links],
+                "currentLink": game.get_current_round().current_link,
+                "currentPlayer": game.get_current_round().get_current_player_num(),
+                "time": format_time(game.get_current_round().seconds_remaining)
+            }
+            self.wfile.write(bytes(json.dumps(response), 'utf-8'))
+        elif None != re.search('/api/final-round', self.path):
+            self.send_response(200)
+            self.send_header('Content-type','text/html')
+            self.end_headers()
+            self.wfile.write(b"Final")
+        else:
+            # serve files, and directory listings by following self.path from ./html/ directory
+            http.server.SimpleHTTPRequestHandler.do_GET(self)
 
-    expected_players = len(rounds) + 2
-    if expected_players > len(players) :
-        print('There are more rounds than players!')
-    elif expected_players < len(players) :
-        print('There are more players than rounds!')
-    else :
-        print('There are the perfect amount of players!')
-    print()
+t = threading.Thread(target=start_server)
+print("Starting server at port", PORT)
+print('Player view: \nhttp://localhost:' + str(PORT) + '/index.html')
+print()
+t.start()
 
-    game = WeakestLinkGame(players, rounds, final_round)
-    print('Ready to start game!')
-    print()
-    print('Your choices during the round are Z=ztupid (wrong), X=bank, C=correct\n')
+question_file = sys.argv[1]
+players = sys.argv[2:]
+print('Welcome players', ', '.join(players))
+print()
 
-    game.run()
+rounds = []
+final_round = FinalRound()
 
+with open(question_file) as csv_file:
 
-if __name__ == '__main__':
-    main()
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    for row in csv_reader :
+        round_num = int(row[0])
+        question = row[1]
+        answer = row[2]
+
+        if round_num > len(ROUNDS) :
+            final_round.add_question(question, answer)
+        else :
+            if round_num > len(rounds) :
+                for i in range(len(rounds), round_num) :
+                    (allotted_time, links) = ROUNDS[i]
+                    links = [link * DOLLAR_PERCENT for link in links]
+                    rounds.append(WeakestLinkRound(allotted_time, links))
+            rounds[round_num - 1].add_question(question, answer)
+
+for i in range(len(rounds)) :
+    round = rounds[i]
+    print('Loaded', len(round.questions), 'questions for round', i+1)
+print('Loaded', len(final_round.questions), 'questions for the final round')
+print()
+
+expected_players = len(rounds) + 2
+if expected_players > len(players) :
+    print('There are more rounds than players!')
+elif expected_players < len(players) :
+    print('There are more players than rounds!')
+else :
+    print('There are the perfect amount of players!')
+print()
+
+game = WeakestLinkGame(players, rounds, final_round)
+print('Ready to start game!')
+print()
+print('Your choices during the round are Z=ztupid (wrong), X=bank, C=correct\n')
+
+game.run()

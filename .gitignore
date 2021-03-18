@@ -1,6 +1,7 @@
 data/
 .vscode/
 .DS_Store
+server.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,0 +1,208 @@
+<html>
+  <head>
+    <title>The Weakest Link</title>
+    <style>
+    body {
+        background-image: url('images/weakest-link-background.png');
+        background-size: center;
+    }
+    h1   {
+        color: white;
+        outline-color:green;
+        /*outline-style:dashed;*/
+        width: 158px;
+        height: 30px;
+        text-align: center;
+        font-size: 28px;
+    }
+    p    {
+        color: white;
+        outline-color:green;
+        /*outline-style:dashed;*/
+        width: 158px;
+        height: 30px;
+        text-align: center;
+        font-size: 18px;
+    }
+    </style>
+  </head>
+  <body>
+    <style>
+
+    </style>
+
+    <!-- Moving red current link -->
+    <img id="current-link" src="images/red-panel.png" style="position:absolute; top:557px; left:92px;">
+
+    <!-- Top middle -->
+    <img id="player-3-panel" src="images/blue-panel.png" style="position:absolute; top:150px; left:700px;">
+
+    <!-- Right side -->
+    <img id="player-4-panel" src="images/blue-panel.png" style="position:absolute; top:180px; left:875px;">
+    <img id="player-5-panel" src="images/blue-panel.png" style="position:absolute; top:210px; left:1050px;">
+    <img id="player-6-panel" src="images/blue-panel.png" style="position:absolute; top:270px; left:1050px;">
+    <img id="player-7-panel" src="images/blue-panel.png" style="position:absolute; top:330px; left:1050px;">
+    <img id="player-8-panel" src="images/blue-panel.png" style="position:absolute; top:360px; left:875px;">
+
+    <!-- Bottom middle -->
+    <img id="player-9-panel" src="images/blue-panel.png" style="position:absolute; top:390px; left:700px;">
+
+    <!-- Left side -->
+    <img id="player-10-panel" src="images/blue-panel.png" style="position:absolute; top:360px; left:525px;">
+    <img id="player-11-panel" src="images/blue-panel.png" style="position:absolute; top:330px; left:350px;">
+    <img id="player-12-panel" src="images/blue-panel.png" style="position:absolute; top:270px; left:350px;">
+    <img id="player-1-panel" src="images/blue-panel.png" style="position:absolute; top:210px; left:350px;">
+    <img id="player-2-panel" src="images/blue-panel.png" style="position:absolute; top:180px; left:525px;">
+
+    <!-- Moving current player red background -->
+    <img id="current-player" src="images/red-panel.png" style="position:absolute; top:210px; left:350px;">
+
+    <!-- Player names -->
+    <p id="player-1" style="position:absolute; top:210px; left:350px;">Waffles</p>
+    <p id="player-2" style="position:absolute; top:180px; left:525px;">Waffles</p>
+    <p id="player-3" style="position:absolute; top:150px; left:700px;">Waffles</p>
+    <p id="player-4" style="position:absolute; top:180px; left:875px;">Waffles</p>
+    <p id="player-5" style="position:absolute; top:210px; left:1050px;">Waffles</p>
+    <p id="player-6" style="position:absolute; top:270px; left:1050px;">Waffles</p>
+    <p id="player-7" style="position:absolute; top:330px; left:1050px;">Waffles</p>
+    <p id="player-8" style="position:absolute; top:360px; left:875px;">Waffles</p>
+    <p id="player-9" style="position:absolute; top:390px; left:700px;">Waffles</p>
+    <p id="player-10" style="position:absolute; top:360px; left:525px;">Waffles</p>
+    <p id="player-11" style="position:absolute; top:330px; left:350px;">Waffles</p>
+    <p id="player-12" style="position:absolute; top:270px; left:350px;">Waffles</p>
+
+    <!-- Bank links -->
+    <p id="bank-link-1" style="position:absolute; top:557px; left:92px;">$2,500</p>
+    <p id="bank-link-2" style="position:absolute; top:500px; left:92px;">$5,000</p>
+    <p id="bank-link-3" style="position:absolute; top:443px; left:92px;">$10,000</p>
+    <p id="bank-link-4" style="position:absolute; top:386px; left:92px;">$25,000</p>
+    <p id="bank-link-5" style="position:absolute; top:329px; left:92px;">$50,000</p>
+    <p id="bank-link-6" style="position:absolute; top:272px; left:92px;">$100,000</p>
+    <p id="bank-link-7" style="position:absolute; top:215px; left:92px;">$250,000</p>
+    <h1 id="bank-link-8" style="position:absolute; top:158px; left:92px;">$500,000</h1>
+
+    <h1 id="current-bank" style="position:absolute; top:607px; left:92px;">$7,000</h1>
+    <p id="total-bank" style="position:absolute; top:605px; left:1025px;">$120,500</p>
+
+    <h1 id="time-remaining" style="position:absolute; top:50px; left:60px;">Time: 0:00</h1>
+
+    <script type="text/javascript">
+    var linkElements = [document.getElementById("bank-link-1"),
+                        document.getElementById("bank-link-2"),
+                        document.getElementById("bank-link-3"),
+                        document.getElementById("bank-link-4"),
+                        document.getElementById("bank-link-5"),
+                        document.getElementById("bank-link-6"),
+                        document.getElementById("bank-link-7"),
+                        document.getElementById("bank-link-8")]
+
+    var currentLink = document.getElementById("current-link")
+    var originalCurrentLinkTop = currentLink.style.top
+
+    var currentBank = document.getElementById("current-bank")
+    var totalBank = document.getElementById("total-bank")
+
+    var currentPlayerPanel = document.getElementById("current-player")
+
+    var playerPanels = [document.getElementById("player-1-panel"),
+                        document.getElementById("player-2-panel"),
+                        document.getElementById("player-3-panel"),
+                        document.getElementById("player-4-panel"),
+                        document.getElementById("player-5-panel"),
+                        document.getElementById("player-6-panel"),
+                        document.getElementById("player-7-panel"),
+                        document.getElementById("player-8-panel"),
+                        document.getElementById("player-9-panel"),
+                        document.getElementById("player-10-panel"),
+                        document.getElementById("player-11-panel"),
+                        document.getElementById("player-12-panel")]
+
+    var playerNames = [document.getElementById("player-1"),
+                        document.getElementById("player-2"),
+                        document.getElementById("player-3"),
+                        document.getElementById("player-4"),
+                        document.getElementById("player-5"),
+                        document.getElementById("player-6"),
+                        document.getElementById("player-7"),
+                        document.getElementById("player-8"),
+                        document.getElementById("player-9"),
+                        document.getElementById("player-10"),
+                        document.getElementById("player-11"),
+                        document.getElementById("player-12")]
+
+    var timeRemaining = document.getElementById("time-remaining")
+
+    var testData = {
+        "players": ["Rory", "Nick", "Laura", "Elliot", "Casey", "Drea", "Corey", "Liz", "Alex", "Katie"],
+        "currentBank": "$0",
+        "totalBank": "$1,100.50",
+        "bankLinks": ["$1,000", "$2,000", "$3,000", "$4,000", "$5,000", "$7,500", "$10,000", "$25,000"],
+        "currentLink": 1,
+        "currentPlayer": 2,
+        "time": "2:00"
+    }
+
+    function refresh(data) {
+        timeRemaining.innerHTML = "Time: " + data["time"]
+
+        // Update player names and panel visibility
+        var players = data["players"]
+        for (var i = 0; i < playerNames.length; i++) {
+            playerName = playerNames[i]
+            playerPanel = playerPanels[i]
+            if (i < players.length) {
+                playerName.innerHTML = players[i]
+                playerName.style.display = "inline";
+                playerPanel.style.display = "inline";
+            } else {
+                playerName.style.display = "none";
+                playerPanel.style.display = "none";
+            }
+        }
+
+        // Update the current player panel
+        currentPlayer = data["currentPlayer"]
+        playerPanel = playerPanels[currentPlayer]
+        currentPlayerPanel.style.left = playerPanel.style.left
+        currentPlayerPanel.style.top = playerPanel.style.top
+
+        // Set the current and total bank amounts
+        currentBank.innerHTML = data["currentBank"]
+        totalBank.innerHTML = data["totalBank"]
+
+        // Set the bank link amounts
+        for (var i = 0; i < linkElements.length; i++) {
+            linkElements[i].innerHTML = data["bankLinks"][i]
+        }
+
+        // Set the current bank link position
+        var currentLinkNum = data["currentLink"]
+        var currentLinkTop = parseInt(originalCurrentLinkTop, 10)
+        for (var i = 0; i < currentLinkNum; i++) {
+            currentLinkTop -= 56
+        }
+        currentLink.style.top = currentLinkTop + 'px'
+    }
+
+    function httpGetAsync(theUrl) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                refresh(JSON.parse(xmlHttp.responseText));
+            }
+        }
+        xmlHttp.open("GET", theUrl, true); // true for asynchronous
+        xmlHttp.send(null);
+    }
+
+    // Periodically refresh our data
+    setInterval(function() {
+        httpGetAsync("/api/current-round")
+    }, 500);
+
+    refresh(testData)
+
+    </script>
+
+  </body>
+</html>
