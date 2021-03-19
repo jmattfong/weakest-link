@@ -161,12 +161,29 @@ def random_mean_word() :
         'embarrassing',
     ])
 
+class Questions :
+
+    def __init__(self) :
+        self.questions = []
+        self.current_question = 0
+
+    def add_question(self, question, answer) :
+        self.questions.append((question, answer))
+
+    def get_next_question(self) :
+        question = self.questions[self.current_question]
+        self.current_question += 1
+        return question
+
+    def remaining_questions(self) :
+        return len(self.questions) - self.current_question
+
 class WeakestLinkRound :
 
-    def __init__(self, round_time_s, bank_links, questions=None) :
+    def __init__(self, round_time_s, bank_links, questions) :
         self.round_time_s = round_time_s
         self.bank_links = bank_links
-        self.questions = questions if questions != None else []
+        self.questions = questions
         self.round_bank = 0
         self.current_link = 0
         self.started = False
@@ -176,9 +193,6 @@ class WeakestLinkRound :
         self.current_player_banked = 0
         self.first_player_offset = 0
         self.seconds_remaining = self.round_time_s
-
-    def add_question(self, question, answer) :
-        self.questions.append((question, answer))
 
     def start_round(self, players, first_player) :
         if self.started :
@@ -222,7 +236,7 @@ class WeakestLinkRound :
     def run(self) :
         self.start_timer()
 
-        while self.current_question < len(self.questions) and not self.done :
+        while not self.done :
             if self.current_link == len(self.bank_links) :
                 self.bank()
                 print(green('The team ran the chain!'))
@@ -252,7 +266,7 @@ class WeakestLinkRound :
 
     def get_question(self) :
         current_player = self.get_current_player()
-        (question, answer) = self.questions[self.current_question]
+        (question, answer) = self.questions.get_next_question()
         return green('"' + current_player + ': ' + question + '?"') + ' (Answer: ' +  red(answer) + ')'
 
     def bank(self) :
@@ -374,15 +388,11 @@ class WeakestLinkRound :
 
 class FinalRound :
 
-    # TODO copied init method
-    def __init__(self, questions=[]) :
+    def __init__(self, questions) :
         self.questions = questions
         self.round_bank = 0
         self.num_rounds = 5
         self.started = False
-
-    def add_question(self, question, answer) :
-        self.questions.append((question, answer))
 
     def start_round(self, players, first_player) :
         if self.started :
@@ -411,7 +421,7 @@ class FinalRound :
         for current_question in range(0, self.num_rounds * 2) :
             player_num = (current_question + self.first_player_offset) % len(self.players)
             current_player = self.players[player_num]
-            (question, answer) = self.questions[current_question]
+            (question, answer) = self.questions.get_next_question()
             print(green('"' + current_player + ': ' + question + '?"') + ' (Answer: ' +  red(answer) + ')')
             choice = wait_for_choice("[Z]tupid or [C]orrect ? ", ['c', 'z']).lower()
             scores[player_num].append(1 if choice == 'c' else 0)
@@ -443,10 +453,10 @@ class FinalRound :
         print()
 
     def sudden_death(self, scores) :
-        for current_question in range(10, len(self.questions)) :
+        for current_question in range(10, self.questions.remaining_questions()) :
             player_num = (current_question + self.first_player_offset) % len(self.players)
             current_player = self.players[player_num]
-            (question, answer) = self.questions[current_question]
+            (question, answer) = self.questions.get_next_question()
             print(green('"' + current_player + ': ' + question + '?"') + ' (Answer: ' +  red(answer) + ')')
             choice = wait_for_choice("[Z]tupid or [C]orrect ? ", ['c', 'z']).lower()
             scores[player_num].append(1 if choice == 'c' else 0)
@@ -586,7 +596,12 @@ print('Welcome players', ', '.join(players))
 print()
 
 rounds = []
-final_round = FinalRound()
+
+expected_rounds = len(players) - 2
+
+questions = Questions()
+
+final_round = FinalRound(questions)
 
 with open(question_file) as csv_file:
 
@@ -595,22 +610,19 @@ with open(question_file) as csv_file:
         round_num = int(row[0])
         question = row[1]
         answer = row[2]
+        questions.add_question(question, answer)
 
-        if round_num > len(ROUNDS) :
-            final_round.add_question(question, answer)
-        else :
-            if round_num > len(rounds) :
-                for i in range(len(rounds), round_num) :
-                    (allotted_time, links) = ROUNDS[i]
-                    links = [link * DOLLAR_PERCENT for link in links]
-                    rounds.append(WeakestLinkRound(allotted_time, links))
-            rounds[round_num - 1].add_question(question, answer)
+planned_rounds = len(ROUNDS)
+for i in range(planned_rounds, expected_rounds) :
+    print('Adding extra first round')
+    (allotted_time, links) = ROUNDS[0]
+    links = [link * DOLLAR_PERCENT for link in links]
+    rounds.append(WeakestLinkRound(allotted_time, links, questions))
 
-for i in range(len(rounds)) :
-    round = rounds[i]
-    print('Loaded', len(round.questions), 'questions for round', i+1)
-print('Loaded', len(final_round.questions), 'questions for the final round')
-print()
+for (allotted_time, links) in ROUNDS :
+    print('Adding Round with allotted time', allotted_time)
+    links = [link * DOLLAR_PERCENT for link in links]
+    rounds.append(WeakestLinkRound(allotted_time, links, questions))
 
 expected_players = len(rounds) + 2
 if expected_players > len(players) :
