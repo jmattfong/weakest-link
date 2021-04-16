@@ -1,11 +1,21 @@
 import threading
 from datetime import datetime
 
-from util import debug, green, red, wait_for_choice
+from weakest_link.util import debug, green, red, wait_for_choice, append_to_file, dollars
 
-class WeakestLinkRound :
+class Round :
 
-    def __init__(self, round_time_s, bank_links, questions) :
+    def __init__(self, name, players) :
+        self.name = name
+
+    def get_name(self) :
+        return self.name
+
+class WeakestLinkRound(Round) :
+
+    def __init__(self, name, round_time_s, bank_links, questions, answer_file='./answers.txt') :
+        super().__init__(self, name)
+        self.name = name
         self.round_time_s = round_time_s
         self.bank_links = bank_links
         self.questions = questions
@@ -18,6 +28,7 @@ class WeakestLinkRound :
         self.current_player_banked = 0
         self.first_player_offset = 0
         self.seconds_remaining = self.round_time_s
+        self.answer_file = answer_file
 
     def start_round(self, players, first_player) :
         if self.started :
@@ -61,6 +72,7 @@ class WeakestLinkRound :
     def run(self) :
         self.start_timer()
 
+        print('\r')
         while not self.done :
             if self.current_link == len(self.bank_links) :
                 self.bank()
@@ -92,7 +104,7 @@ class WeakestLinkRound :
     def get_question(self) :
         current_player = self.get_current_player()
         (question, answer) = self.questions.get_next_question()
-        return green('"' + current_player + ': ' + question + '?"') + ' (Answer: ' +  red(answer) + ')'
+        return green('"' + current_player + ': ' + question + '"') + ' (Answer: ' +  red(answer) + ')'
 
     def bank(self) :
         if not self.started :
@@ -119,6 +131,7 @@ class WeakestLinkRound :
         # TODO why was it like this? current_player = self.players[self.current_question % len(self.players)]
         current_player = self.get_current_player()
         answer = (correct, question_stop_time - self.question_start_time, self.current_player_banked)
+        append_to_file(self.answer_file, (current_player, answer, self.questions.get_current_question()))
         self.player_answers[current_player].append(answer)
 
         # Setup the next question
@@ -137,6 +150,7 @@ class WeakestLinkRound :
         self.started = False
         self.done = True
         print()
+        append_to_file(self.answer_file, ('End round ' + self.get_name(), dollars(self.round_bank, color=False)))
 
     def get_strongest_link(self, eliminated=None) :
         strongest_link = None

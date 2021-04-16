@@ -38,7 +38,7 @@ def starts_with_vowel(word) :
 def green(message) :
     return GREEN + BOLD + str(message) + END + END
 
-def random_mean_word() :
+def get_random_mean_word() :
     return random.choice([
         'paltry',
         'meager',
@@ -70,3 +70,7 @@ def random_mean_word() :
         'mortifying',
         'embarrassing',
     ])
+
+def append_to_file(file_name, data) :
+    with open(file_name, 'a') as f :
+        f.write('\n' + str(data))

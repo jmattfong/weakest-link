@@ -1,4 +1,4 @@
-from util import wait_for_choice, green, red, dollars, random_mean_word, starts_with_vowel
+from weakest_link.util import wait_for_choice, green, red, dollars, get_random_mean_word, starts_with_vowel, format_time
 
 class WeakestLinkGame :
 
@@ -10,8 +10,48 @@ class WeakestLinkGame :
         self.maximum_bank = 0
         self.current_round = 0
 
+    # For the API
+
     def get_current_round(self) :
         return self.rounds[self.current_round] if self.current_round < len(self.rounds) else self.final_round
+
+    def get_current_round_name(self) :
+        return self.get_current_round().get_name()
+
+    def get_players(self) :
+        return self.players
+
+    def get_current_bank(self, color=True) :
+        if self.current_round >= len(self.rounds) :
+            return 0
+        return dollars(self.get_current_round().round_bank, color=color)
+
+    def get_total_bank(self, color=True) :
+        return dollars(self.total_bank, color=False)
+
+    def get_bank_links(self) :
+        if self.current_round >= len(self.rounds) :
+            return []
+        return [dollars(link, color=False) for link in self.get_current_round().bank_links]
+
+    def get_current_link(self) :
+        if self.current_round >= len(self.rounds) :
+            return 0
+        return self.get_current_round().current_link
+
+    def get_current_player_num(self) :
+        if self.current_round >= len(self.rounds) :
+            return 0
+        return self.get_current_round().get_current_player_num()
+
+    def get_time_remaining(self) :
+        if self.current_round >= len(self.rounds) :
+            return 0
+        time = self.get_current_round().seconds_remaining
+        time = time if time > 0 else 0
+        return format_time(time)
+
+    # For the CLI
 
     def run(self) :
         first_player = self.players[0]
@@ -31,6 +71,8 @@ class WeakestLinkGame :
             if first_player == weakest_link :
                 first_player = round.get_strongest_link(first_player)
 
+        self.current_round = len(self.rounds)
+
         while len(self.players) > 2 :
             weakest_link = self.vote_for_weakest_link()
             if first_player == weakest_link :
@@ -43,6 +85,8 @@ class WeakestLinkGame :
         print(green(str(self.final_round.winner) + ' is the winner! They win ' + dollars(self.total_bank)))
         print()
         print("Game over, goodnight!")
+
+    # Helpers
 
     def try_to_start_round(self, round_num, round, first_player) :
         wait_for_choice("Enter 'S' to start round " + str(round_num) + " > ", 'S')
@@ -60,10 +104,10 @@ class WeakestLinkGame :
         self.maximum_bank += round.bank_links[-1]
         strongest_link = round.get_strongest_link()
         print('That round the team banked', dollars(round.round_bank))
-        adjective = random_mean_word()
+        adjective = get_random_mean_word()
         print('Out of a possible', dollars(self.maximum_bank), "the team banked", 'an' if starts_with_vowel(adjective) else 'a', adjective, dollars(self.total_bank))
-        print('Statistically, the strongest link was', green(strongest_link))
-        print('Statistically, the weakest link was', red(round.get_weakest_link()))
+        print('Statistically, the', green('strongest link'), 'was', green(strongest_link))
+        print('Statistically, the', red('weakest link'), 'was', red(round.get_weakest_link()))
         print()
         return strongest_link
 

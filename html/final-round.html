@@ -1,0 +1,172 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+
+    <title>The Weakest Link</title>
+    <style>
+    body {
+        background-color:#000000;
+        background-size: center;
+    }
+    h1   {
+        color: white;
+        outline-color:green;
+        /*outline-style:dashed;*/
+        width: 158px;
+        height: 30px;
+        text-align: center;
+        font-size: 28px;
+    }
+    p    {
+        color: white;
+        outline-color:green;
+        /*outline-style:dashed;*/
+        width: 158px;
+        height: 30px;
+        text-align: center;
+        font-size: 18px;
+    }
+    </style>
+  </head>
+  <body>
+    <style>
+
+    </style>
+
+    <!-- Player One's side -->
+    <img id="player-1-correct-7" src="images/blue-panel.png" style="position:absolute; top:120px; left:375px; display: none;">
+    <img id="player-1-correct-6" src="images/blue-panel.png" style="position:absolute; top:180px; left:375px; display: none;">
+    <img id="player-1-correct-5" src="images/blue-panel.png" style="position:absolute; top:240px; left:375px; display: none">
+    <img id="player-1-correct-4" src="images/blue-panel.png" style="position:absolute; top:300px; left:375px; display: none">
+    <img id="player-1-correct-3" src="images/blue-panel.png" style="position:absolute; top:360px; left:375px; display: none">
+    <img id="player-1-correct-2" src="images/blue-panel.png" style="position:absolute; top:420px; left:375px; display: none">
+    <img id="player-1-correct-1" src="images/blue-panel.png" style="position:absolute; top:480px; left:375px; display: none">
+
+    <img id="player-1-wrong-7" src="images/red-panel.png" style="position:absolute; top:120px; left:375px; display: none;">
+    <img id="player-1-wrong-6" src="images/red-panel.png" style="position:absolute; top:180px; left:375px; display: none">
+    <img id="player-1-wrong-5" src="images/red-panel.png" style="position:absolute; top:240px; left:375px; display: none">
+    <img id="player-1-wrong-4" src="images/red-panel.png" style="position:absolute; top:300px; left:375px; display: none">
+    <img id="player-1-wrong-3" src="images/red-panel.png" style="position:absolute; top:360px; left:375px; display: none">
+    <img id="player-1-wrong-2" src="images/red-panel.png" style="position:absolute; top:420px; left:375px; display: none">
+    <img id="player-1-wrong-1" src="images/red-panel.png" style="position:absolute; top:480px; left:375px; display: none">
+
+    <h1 id="player-1" style="position:absolute; top:580px; left:375px; width: 160px;">Matt</h1>
+
+    <!-- Player Two's side -->
+    <img id="player-2-correct-7" src="images/blue-panel.png" style="position:absolute; top:120px; left:875px; display: none;">
+    <img id="player-2-correct-6" src="images/blue-panel.png" style="position:absolute; top:180px; left:875px; display: none">
+    <img id="player-2-correct-5" src="images/blue-panel.png" style="position:absolute; top:240px; left:875px; display: none">
+    <img id="player-2-correct-4" src="images/blue-panel.png" style="position:absolute; top:300px; left:875px; display: none">
+    <img id="player-2-correct-3" src="images/blue-panel.png" style="position:absolute; top:360px; left:875px; display: none">
+    <img id="player-2-correct-2" src="images/blue-panel.png" style="position:absolute; top:420px; left:875px; display: none">
+    <img id="player-2-correct-1" src="images/blue-panel.png" style="position:absolute; top:480px; left:875px; display: none">
+
+    <img id="player-2-wrong-7" src="images/red-panel.png" style="position:absolute; top:120px; left:875px; display: none">
+    <img id="player-2-wrong-6" src="images/red-panel.png" style="position:absolute; top:180px; left:875px; display: none">
+    <img id="player-2-wrong-5" src="images/red-panel.png" style="position:absolute; top:240px; left:875px; display: none">
+    <img id="player-2-wrong-4" src="images/red-panel.png" style="position:absolute; top:300px; left:875px; display: none">
+    <img id="player-2-wrong-3" src="images/red-panel.png" style="position:absolute; top:360px; left:875px; display: none">
+    <img id="player-2-wrong-2" src="images/red-panel.png" style="position:absolute; top:420px; left:875px; display: none">
+    <img id="player-2-wrong-1" src="images/red-panel.png" style="position:absolute; top:480px; left:875px; display: none">
+
+    <h1 id="player-2" style="position:absolute; top:580px; left:875px; width: 160px;">Waffles</h1>
+
+    <h1 id="total-bank" style="position:absolute; top:50px; left:60px; width: 500px; text-align: left;">Final Bank: $1 Gazillion</h1>
+
+    <script type="text/javascript">
+    var totalBank = document.getElementById("total-bank")
+
+    var playerOneCorrect = [document.getElementById("player-1-correct-1"),
+                            document.getElementById("player-1-correct-2"),
+                            document.getElementById("player-1-correct-3"),
+                            document.getElementById("player-1-correct-4"),
+                            document.getElementById("player-1-correct-5"),
+                            document.getElementById("player-1-correct-6"),
+                            document.getElementById("player-1-correct-7")]
+
+    var playerOneWrong = [document.getElementById("player-1-wrong-1"),
+                            document.getElementById("player-1-wrong-2"),
+                            document.getElementById("player-1-wrong-3"),
+                            document.getElementById("player-1-wrong-4"),
+                            document.getElementById("player-1-wrong-5"),
+                            document.getElementById("player-1-wrong-6"),
+                            document.getElementById("player-1-wrong-7")]
+
+    var playerTwoCorrect = [document.getElementById("player-2-correct-1"),
+                            document.getElementById("player-2-correct-2"),
+                            document.getElementById("player-2-correct-3"),
+                            document.getElementById("player-2-correct-4"),
+                            document.getElementById("player-2-correct-5"),
+                            document.getElementById("player-2-correct-6"),
+                            document.getElementById("player-2-correct-7")]
+
+    var playerTwoWrong = [document.getElementById("player-2-wrong-1"),
+                            document.getElementById("player-2-wrong-2"),
+                            document.getElementById("player-2-wrong-3"),
+                            document.getElementById("player-2-wrong-4"),
+                            document.getElementById("player-2-wrong-5"),
+                            document.getElementById("player-2-wrong-6"),
+                            document.getElementById("player-2-wrong-7")]
+
+    var playerNames = [document.getElementById("player-1"), document.getElementById("player-2")]
+
+    var testData = {
+        "players": ["Rory", "Anna"],
+        "totalBank": "$3.50",
+        "scores": [[true, false, true, false, false, true, true], [true, true, true, true, false, true, true]],
+    }
+
+    function refresh(data) {
+        // Update player names
+        var players = data["players"]
+        playerNames[0].innerHTML = players[0]
+        playerNames[1].innerHTML = players[1]
+
+        // Set the current and total bank amounts
+        totalBank.innerHTML = data["totalBank"]
+
+        var playerOneScores = data["scores"][0]
+        var playerTwoScores = data["scores"][1]
+
+        for (var i = 0; i < playerOneScores.length; i++) {
+            var score = playerOneScores[i]
+            if (score) {
+                playerOneCorrect[i].style.display = "inline"
+            } else {
+                playerOneWrong[i].style.display = "inline"
+            }
+        }
+
+        for (var i = 0; i < playerTwoScores.length; i++) {
+            var score = playerTwoScores[i]
+            if (score) {
+                playerTwoCorrect[i].style.display = "inline"
+            } else {
+                playerTwoWrong[i].style.display = "inline"
+            }
+        }
+    }
+
+    function httpGetAsync(theUrl) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                refresh(JSON.parse(xmlHttp.responseText));
+            }
+        }
+        xmlHttp.open("GET", theUrl, true); // true for asynchronous
+        xmlHttp.send(null);
+    }
+
+    // Periodically refresh our data
+    setInterval(function() {
+        httpGetAsync("/api/current-round")
+    }, 500);
+
+    //refresh(testData)
+
+    </script>
+
+  </body>
+</html>

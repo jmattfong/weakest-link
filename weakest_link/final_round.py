@@ -1,26 +1,35 @@
 from datetime import datetime
-from util import green, red, wait_for_choice
+from weakest_link.util import green, red, wait_for_choice
+from weakest_link.round import Round
 
-class FinalRound :
+class FinalRound(Round) :
 
-    def __init__(self, questions) :
+    def __init__(self, players, questions) :
+        super().__init__(self, 'Final')
+        self.players = players
         self.questions = questions
         self.round_bank = 0
         self.num_rounds = 5
         self.started = False
+        self.scores = [[], []]
+
+    def get_name(self) :
+        return 'Final'
+
+    def get_scores(self) :
+        return [[score == 1 for score in self.scores[0]], [score == 1 for score in self.scores[1]]]
 
     def start_round(self, players, first_player) :
         if self.started :
             print('Round is already started!')
             return
-        self.players = players
         self.started = True
         self.start_time = datetime.now()
         self.question_start_time = self.start_time
         self.current_question = 0
 
         self.first_player_offset = 0
-        for player in players :
+        for player in self.players :
             if first_player == player :
                 break
             else :
@@ -40,7 +49,7 @@ class FinalRound :
             print(green('"' + current_player + ': ' + question + '?"') + ' (Answer: ' +  red(answer) + ')')
             choice = wait_for_choice("[Z]tupid or [C]orrect ? ", ['c', 'z']).lower()
             scores[player_num].append(1 if choice == 'c' else 0)
-            self.print_score_update(scores)
+            self.update_scores(scores)
 
         # Sum the totals
         final_scores = [sum(score) for score in scores]
@@ -53,7 +62,8 @@ class FinalRound :
         else :
             self.winner = self.players[0]
 
-    def print_score_update(self, scores) :
+    def update_scores(self, scores) :
+        self.scores = scores
         print('Scores:')
         for (player, score) in zip(self.players, scores) :
             print(player, end=':')
@@ -75,7 +85,7 @@ class FinalRound :
             print(green('"' + current_player + ': ' + question + '?"') + ' (Answer: ' +  red(answer) + ')')
             choice = wait_for_choice("[Z]tupid or [C]orrect ? ", ['c', 'z']).lower()
             scores[player_num].append(1 if choice == 'c' else 0)
-            self.print_score_update(scores)
+            self.update_scores(scores)
 
             if len(scores[0]) == len(scores[1]) :
                 final_scores = [sum(score) for score in scores]

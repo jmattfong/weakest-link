@@ -9,13 +9,15 @@ import http.server
 import re
 import json
 
-from util import dollars, format_time, debug
-from questions import Questions
-from final_round import FinalRound
-from round import WeakestLinkRound
-from game import WeakestLinkGame
+from weakest_link.util import dollars, format_time, debug
+from weakest_link.questions import Questions
+from weakest_link.final_round import FinalRound
+from weakest_link.round import WeakestLinkRound
+from weakest_link.game import WeakestLinkGame
 
-PORT=8080
+# Constants
+
+PORT=1990
 
 # How much each default "dollar" is worth
 DOLLAR_PERCENT = 1.0 / 2000
@@ -87,12 +89,12 @@ ROUND_6_LINKS = [
 ]
 
 ROUNDS = [
-    (170, ROUND_1_LINKS),
-    (160, ROUND_2_LINKS),
-    (150, ROUND_3_LINKS),
-    (140, ROUND_4_LINKS),
-    (130, ROUND_5_LINKS),
-    (120, ROUND_6_LINKS)
+    (160, ROUND_1_LINKS),
+    (150, ROUND_2_LINKS),
+    (140, ROUND_3_LINKS),
+    (130, ROUND_4_LINKS),
+    (120, ROUND_5_LINKS),
+    (110, ROUND_6_LINKS)
 ]
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
@@ -114,11 +116,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             response = get_current_round_details()
             self.wfile.write(bytes(json.dumps(response), 'utf-8'))
-        elif None != re.search('/api/final-round', self.path):
-            self.send_response(200)
-            self.send_header('Content-type','text/html')
-            self.end_headers()
-            self.wfile.write(b"Final")
         else:
             # serve files, and directory listings by following self.path from ./html/ directory
             http.server.SimpleHTTPRequestHandler.do_GET(self)
@@ -128,22 +125,22 @@ def start_server():
     httpd.serve_forever()
 
 def get_current_round_details() :
-    return {
-        "players": game.players,
-        "currentBank": dollars(game.get_current_round().round_bank, color=False),
-        "totalBank": dollars(game.total_bank, color=False),
-        "bankLinks": [dollars(link, color=False) for link in game.get_current_round().bank_links],
-        "currentLink": game.get_current_round().current_link,
-        "currentPlayer": game.get_current_round().get_current_player_num(),
-        "time": format_time(game.get_current_round().seconds_remaining)
-    }
-
-def get_final_round_details() :
-    return {
-    }
+    response = {
+            "round": game.get_current_round_name(),
+            "players": game.get_players(),
+            "currentBank": game.get_current_bank(color=False),
+            "totalBank": game.get_total_bank(color=False),
+            "bankLinks": game.get_bank_links(),
+            "currentLink": game.get_current_link(),
+            "currentPlayer": game.get_current_player_num(),
+            "time": game.get_time_remaining()
+        }
+    if game.get_current_round_name() == 'Final':
+        response["scores"] = final_round.get_scores()
+    return response
 
 """
-Main method. Why are python servers so anti OOP??
+Main method. Kinda.
 """
 
 # Parse the arguments
@@ -159,9 +156,8 @@ questions = Questions()
 with open(question_file) as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     for row in csv_reader :
-        round_num = int(row[0])
-        question = row[1]
-        answer = row[2]
+        question = row[0]
+        answer = row[1]
         questions.add_question(question, answer)
 
 # Setup the rounds
@@ -170,19 +166,21 @@ expected_rounds = len(players) - 2
 planned_rounds = len(ROUNDS)
 
 # Create the normal amound of rounds
-for (allotted_time, links) in ROUNDS :
+offset = 0 if planned_rounds <= expected_rounds else planned_rounds - expected_rounds
+for i in range(0, min(expected_rounds, len(ROUNDS))) :
+    (allotted_time, links) = ROUNDS[i + offset]
     debug('Adding Round with allotted time', allotted_time)
     links = [link * DOLLAR_PERCENT for link in links]
-    rounds.append(WeakestLinkRound(allotted_time, links, questions))
+    rounds.append(WeakestLinkRound(str(i), allotted_time, links, questions))
 
 # Add extra rounds to match the number of players, if needed
 for i in range(planned_rounds, expected_rounds) :
     debug('Adding extra round')
     (allotted_time, links) = ROUNDS[-1]
     links = [link * DOLLAR_PERCENT for link in links]
-    rounds.append(WeakestLinkRound(allotted_time, links, questions))
+    rounds.append(WeakestLinkRound(str(i+1), allotted_time - 10, links, questions))
 
-final_round = FinalRound(questions)
+final_round = FinalRound(players, questions)
 game = WeakestLinkGame(players, rounds, final_round)
 
 # Start the server

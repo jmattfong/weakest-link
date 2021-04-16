@@ -1,5 +1,8 @@
 <html>
   <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+
     <title>The Weakest Link</title>
     <style>
     body {
@@ -143,6 +146,10 @@
     }
 
     function refresh(data) {
+        if (data["round"] == "Final") {
+            window.location.href = "final-round.html";
+            return
+        }
         timeRemaining.innerHTML = "Time: " + data["time"]
 
         // Update player names and panel visibility
