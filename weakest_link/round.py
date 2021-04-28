@@ -40,6 +40,8 @@ class WeakestLinkRound(Round) :
         self.question_start_time = self.start_time
         self.started = True
 
+        append_to_file(self.answer_file, 'Start round ' + self.get_name())
+
         self.first_player_offset = 0
         for player in players :
             if first_player == player :
@@ -73,6 +75,8 @@ class WeakestLinkRound(Round) :
         self.start_timer()
 
         print('\r')
+
+        get_next_question = False
         while not self.done :
             if self.current_link == len(self.bank_links) :
                 self.bank()
@@ -80,17 +84,20 @@ class WeakestLinkRound(Round) :
                 print()
                 self.stop_round()
                 return
-            print(self.spaces, self.get_question(), end ="")
+            print(self.spaces, self.get_question(get_next_question), end ="")
             choice = wait_for_choice("\r" + self.spaces[:-7] + "[Z,X,C] ", ['c', 'z', 'x']).lower()
             if self.done :
                 print('Round is over!')
                 break
             elif choice == 'c' :
                 self.answer_question(True)
+                get_next_question = True
             elif choice == 'z':
                 self.answer_question(False)
+                get_next_question = True
             else:
                 self.current_player_banked = self.bank()
+                get_next_question = False
 
         self.done = True
         print()
@@ -101,9 +108,12 @@ class WeakestLinkRound(Round) :
     def get_current_player(self) :
         return self.players[self.get_current_player_num()]
 
-    def get_question(self) :
+    def get_question(self, get_next) :
         current_player = self.get_current_player()
-        (question, answer) = self.questions.get_next_question()
+        if get_next :
+            (question, answer) = self.questions.get_next_question()
+        else :
+            (question, answer) = self.questions.get_current_question()
         return green('"' + current_player + ': ' + question + '"') + ' (Answer: ' +  red(answer) + ')'
 
     def bank(self) :

@@ -144,7 +144,7 @@ Main method. Kinda.
 """
 
 # Parse the arguments
-if len(sys.argv) < 5 :
+if len(sys.argv) < 7 :
     print('Not enough players provided! Usage: ./weakest_link.py <path-to-questions.csv> Player1 Player2 ... PlayerN')
     sys.exit(1)
 question_file = sys.argv[1]

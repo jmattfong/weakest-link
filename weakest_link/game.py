@@ -67,7 +67,16 @@ class WeakestLinkGame :
             round = self.rounds[i]
             self.try_to_start_round(i+1, round, first_player)
             first_player = self.handle_finished_round_results(round)
-            weakest_link = self.vote_for_weakest_link()
+            if self.current_round < 2 :
+                print('Not voting off weakest link since we are on round', self.current_round+1)
+                weakest_link = None
+            elif self.current_round == 2 :
+                print(red('Time to vote off multiple players!'))
+                weakest_link = self.vote_for_weakest_link()
+                weakest_link = self.vote_for_weakest_link()
+                weakest_link = self.vote_for_weakest_link()
+            else :
+                weakest_link = self.vote_for_weakest_link()
             if first_player == weakest_link :
                 first_player = round.get_strongest_link(first_player)
 

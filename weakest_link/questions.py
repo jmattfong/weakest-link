@@ -11,8 +11,8 @@ class Questions :
         return self.questions[self.current_question]
 
     def get_next_question(self) :
-        question = self.get_current_question()
         self.current_question += 1
+        question = self.get_current_question()
         return question
 
     def remaining_questions(self) :
